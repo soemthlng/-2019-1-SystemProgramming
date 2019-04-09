@@ -142,14 +142,14 @@ int ls_function(const char *name, char **path){
 }
 
 ///////////////////////////////////////////////////////////////////////
-//Makefile							//
+//Makefile							     //
 ///////////////////////////////////////////////////////////////////////
-//OBJS = simple_ls.c							//
-//CC = gcc							//
-//EXEC  = simple_ls						//
-//										//
-//all: $(OBJS)								//
-//	$(CC) -o $(EXEC) $^					//
-//clean:								//
-//	rm -rf $(EXEC)						//
+//OBJS = simple_ls.c					 	     //
+//CC = gcc							     //
+//EXEC  = simple_ls						     //
+//								     //
+//all: $(OBJS)							     //
+//	$(CC) -o $(EXEC) $^					     //
+//clean:							     //
+//	rm -rf $(EXEC)						     //
 ///////////////////////////////////////////////////////////////////////
