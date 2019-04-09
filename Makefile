@@ -1,6 +1,6 @@
-OBJS = ls2.c
+OBJS = Advanced_ls.c
 CC = gcc
-EXEC  = test
+EXEC  = spls_advanced
 
 all: $(OBJS)
 	$(CC) -o $(EXEC) $^
