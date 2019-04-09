@@ -1,8 +1,8 @@
-OBJS = sinmple_ls.c
+OBJS = ls2.c
 CC = gcc
-EXEC  = simple_ls
+EXEC  = test
 
 all: $(OBJS)
 	$(CC) -o $(EXEC) $^
 clean:
-	rm -rf $(EXEX)
+	rm -rf $(EXEC)
