@@ -98,7 +98,7 @@ void    PrintInfo(List *list, char c, FILE *file);
 int     IsDir(char *Dirname);
 
 // Tokenizer
-int     Tokenizer(char *path);
+char*     Tokenizer(char *path);
 
 // Main purpose function
 int     ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag, int argc, char **argv, FILE *file);
@@ -238,7 +238,6 @@ int List_Insert(List* list, const char *Dirname, char flag){
     dinfo->time[1]=time->tm_min;
 //////////////////////// Set file permission, save data into node and set nextnode to NULL ///////////////////////
     CheckFilePermission(&buf, dinfo);
-printf("Dirname : %s\n", Dirname);
     strcpy(dinfo->filename,Dirname);
     NewNode->Data = dinfo;
     NewNode->NextNode = NULL;
@@ -622,7 +621,7 @@ int DotCompare(char *file1, char *file2){
 void    PrintInfo(List *list, char c, FILE *file){
   int       i = 0;
   Node      *ptr;
-  char      name[255];
+  char       *name;
 /////////////////////////////////// ERROR check ////////////////////////////////
   if(list->size == 0){
      printf("Empty\n");
@@ -634,15 +633,14 @@ void    PrintInfo(List *list, char c, FILE *file){
     case 'l':
                 ptr = list->Head->NextNode;
                 while(ptr != list->Tail){
-                  if(strncmp(((DInfo*)ptr->Data)->permission, "d", 1) == 0){
+                  if(!strncmp(((DInfo*)ptr->Data)->permission, "d", 1)){
                     fputs("<tr><td style=\"color:blue\">", file);
                     fputs("<a href=\"", file);
                     fputs(((DInfo*)ptr->Data)->filename, file);
                     fputs("\">", file);
-                    strcpy(name, ((DInfo*)ptr->Data)->filename);
-printf("b filename : %s\n", name);
-                    Tokenizer(name);
-printf("a filename : %s\n", name);
+printf("filename : %s\n", ((DInfo*)ptr->Data)->filename);
+                    name = Tokenizer(((DInfo*)ptr->Data)->filename);
+printf("name : %s\n", name);
                     fputs(name, file);
                     fputs("</a>", file);
                     fputs("</td>\n", file);
@@ -671,12 +669,13 @@ printf("a filename : %s\n", name);
                     fputs(date, file);
                     fputs("</td></tr>", file);
                   }
-                  else if(strncmp(((DInfo*)ptr->Data)->permission, "l", 1) == 0){
+                  else if(!strncmp(((DInfo*)ptr->Data)->permission, "l", 1)){
                     fputs("<tr><td style=\"color:green\">", file);
                     fputs("<a href=\"", file);
                     fputs(((DInfo*)ptr->Data)->filename, file);
                     fputs("\">", file);
-                    fputs(((DInfo*)ptr->Data)->filename, file);
+                    name = Tokenizer(((DInfo*)ptr->Data)->filename);
+                    fputs(name, file);
                     fputs("</a>", file);
                     fputs("</td>\n", file);
                     fputs("<td style=\"color:green\">", file);
@@ -709,7 +708,8 @@ printf("a filename : %s\n", name);
                     fputs("<a href=\"", file);
                     fputs(((DInfo*)ptr->Data)->filename, file);
                     fputs("\">", file);
-                    fputs(((DInfo*)ptr->Data)->filename, file);
+                    name = Tokenizer(((DInfo*)ptr->Data)->filename);
+                    fputs(name, file);
                     fputs("</a>", file);
                     fputs("</td>\n", file);
                     fputs("<td style=\"color:red\">", file);
@@ -744,12 +744,13 @@ printf("a filename : %s\n", name);
     case 'n':
                 ptr = list->Head->NextNode;
                 while(ptr != list->Tail){
-                  if(strncmp(((DInfo*)ptr->Data)->permission, "d", 1) == 0){
+                  if(!strncmp(((DInfo*)ptr->Data)->permission, "d", 1)){
                     fputs("<tr><td style=\"color:blue\">", file);
                     fputs("<a href=\"", file);
                     fputs(((DInfo*)ptr->Data)->filename, file);
                     fputs("\">", file);
-                    fputs(((DInfo*)ptr->Data)->filename, file);
+                    name = Tokenizer(((DInfo*)ptr->Data)->filename);
+                    fputs(name, file);
                     fputs("</a>", file);
                     fputs("</td>\n", file);
                     fputs("<td style=\"color:blue\">", file);
@@ -777,8 +778,8 @@ printf("a filename : %s\n", name);
                     fputs(date, file);
                     fputs("</td></tr>", file);
                   }
-                  else if(strncmp(((DInfo*)ptr->Data)->permission, "l", 1) == 0){
-                    if(strcmp(((DInfo*)ptr->Data)->filename,"html_ls.html") == 0){
+                  else if(!strncmp(((DInfo*)ptr->Data)->permission, "l", 1)){
+                    if(!strcmp(((DInfo*)ptr->Data)->filename,"html_ls.html")){
                       ptr = ptr->NextNode;
                       continue;
                     }
@@ -786,7 +787,8 @@ printf("a filename : %s\n", name);
                     fputs("<a href=\"", file);
                     fputs(((DInfo*)ptr->Data)->filename, file);
                     fputs("\">", file);
-                    fputs(((DInfo*)ptr->Data)->filename, file);
+                    name = Tokenizer(((DInfo*)ptr->Data)->filename);
+                    fputs(name, file);
                     fputs("</a>", file);
                     fputs("</td>\n", file);
                     fputs("<td style=\"color:green\">", file);
@@ -815,7 +817,7 @@ printf("a filename : %s\n", name);
                     fputs("</td></tr>", file);
                   }
                   else{
-                    if(strcmp(((DInfo*)ptr->Data)->filename,"html_ls.html") == 0){
+                    if(!strcmp(((DInfo*)ptr->Data)->filename,"html_ls.html")){
                       ptr = ptr->NextNode;
                       continue;
                     }
@@ -823,7 +825,8 @@ printf("a filename : %s\n", name);
                     fputs("<a href=\"", file);
                     fputs(((DInfo*)ptr->Data)->filename, file);
                     fputs("\">", file);
-                    fputs(((DInfo*)ptr->Data)->filename, file);
+                    name = Tokenizer(((DInfo*)ptr->Data)->filename);
+                    fputs(name, file);
                     fputs("</a>", file);
                     fputs("</td>\n", file);
                     fputs("<td style=\"color:red\">", file);
@@ -858,12 +861,13 @@ printf("a filename : %s\n", name);
     case 'h':
                   ptr = list->Head->NextNode;
                     while(ptr != list->Tail){
-                      if(strncmp(((DInfo*)ptr->Data)->permission, "d", 1) == 0){
+                      if(!strncmp(((DInfo*)ptr->Data)->permission, "d", 1)){
                         fputs("<tr><td style=\"color:blue\">", file);
                         fputs("<a href=\"", file);
                         fputs(((DInfo*)ptr->Data)->filename, file);
                         fputs("\">", file);
-                        fputs(((DInfo*)ptr->Data)->filename, file);
+                        name = Tokenizer(((DInfo*)ptr->Data)->filename);
+                        fputs(name, file);
                         fputs("</a>", file);
                         fputs("</td>\n", file);
                         fputs("<td style=\"color:blue\">", file);
@@ -892,8 +896,8 @@ printf("a filename : %s\n", name);
                         fputs(date, file);
                         fputs("</td></tr>", file);
                       }
-                      else if(strncmp(((DInfo*)ptr->Data)->permission, "l", 1) == 0){
-                        if(strcmp(((DInfo*)ptr->Data)->filename,"html_ls.html") == 0){
+                      else if(!strncmp(((DInfo*)ptr->Data)->permission, "l", 1)){
+                        if(!strcmp(((DInfo*)ptr->Data)->filename,"html_ls.html")){
                           ptr = ptr->NextNode;
                           continue;
                         }
@@ -901,7 +905,8 @@ printf("a filename : %s\n", name);
                         fputs("<a href=\"", file);
                         fputs(((DInfo*)ptr->Data)->filename, file);
                         fputs("\">", file);
-                        fputs(((DInfo*)ptr->Data)->filename, file);
+                        name = Tokenizer(((DInfo*)ptr->Data)->filename);
+                        fputs(name, file);
                         fputs("</a>", file);
                         fputs("</td>\n", file);
                         fputs("<td style=\"color:green\">", file);
@@ -931,7 +936,7 @@ printf("a filename : %s\n", name);
                         fputs("</td></tr>", file);
                       }
                       else{
-                        if(strcmp(((DInfo*)ptr->Data)->filename,"html_ls.html") == 0){
+                        if(!strcmp(((DInfo*)ptr->Data)->filename,"html_ls.html")){
                           ptr = ptr->NextNode;
                           continue;
                         }
@@ -939,7 +944,8 @@ printf("a filename : %s\n", name);
                         fputs("<a href=\"", file);
                         fputs(((DInfo*)ptr->Data)->filename, file);
                         fputs("\">", file);
-                        fputs(((DInfo*)ptr->Data)->filename, file);
+                        name = Tokenizer(((DInfo*)ptr->Data)->filename);
+                        fputs(name, file);
                         fputs("</a>", file);
                         fputs("</td>\n", file);
                         fputs("<td style=\"color:red\">", file);
@@ -1009,6 +1015,7 @@ int IsDir(char *Dirname){
       tok =strtok(NULL, "/");
       count++;
     }
+printf("before DIr : %s\n", Dirname);
 //////////////////////// tokenize * in /home/~~ dir ////////////////////////////
     for (; *Dirname != '\0'; Dirname++){
       if (*Dirname == eli){
@@ -1016,6 +1023,7 @@ int IsDir(char *Dirname){
         Dirname--;
       }
     }
+  printf("after DIr : %s\n", Dirname);
 ////////////////////////////// return count ////////////////////////////////////
     return count; // 3
   }
@@ -1028,25 +1036,39 @@ int IsDir(char *Dirname){
 
 
 
-int Tokenizer(char *path){
+char* Tokenizer(char *path){
   char                filename[255] = "";   // save Filename
-//  char                Temp[255] = "";       // temp variable
   char                tk = '/';             // tokenizer
+  int                 count = 0;
 ////////////////////////// Making temp /////////////////////////////////////////
 
+if(!strncmp(path, "/", 1)){
   for (; *path != '\0'; path++){
     if (*path == tk){
       strcpy(filename, path + 1);
       strcpy(path, path + 1);
       path--;
+      count++;
     }
   }
+}
+else if(!strncmp(path, "./", 2)){
+  for (; *path != '\0'; path++){
+    if (*path == tk){
+      strcpy(filename, path + 1);
+      strcpy(path, path + 1);
+      path--;
+      count++;
+    }
+  }
+}
+//  memcpy(path, filename, sizeof(filename));
+  if(count){
+    strcpy(path, filename);
+      return path;
+  }
+  else  return path;
 
-//printf("filename : %s\n", filename);
-strc
-strcpy(path, filename);
-printf("path : %s\n", path);
-  return 0;
 }
 //End Tokenizer
 
@@ -2458,7 +2480,6 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
     else if(!Check){
       for(optind; optind < argc; optind++){ // Iterate the number of paths
         strcpy(Dirname, argv[optind]); // Set path
-printf("dir : %s\n", Dirname);
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname)) printf("cannot access '%s' : No such file or directory\n", Dirname);
