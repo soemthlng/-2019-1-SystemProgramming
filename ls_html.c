@@ -1,11 +1,11 @@
 //////////////////////////////////////////////////////////////////////////////
 // File Name   : ls_html.c                                             	  //
-// Date      : 2019/05/1s                                                   //
+// Date      : 2019/05/2                                               //
 // Os      : Ubuntu 16.04 64bits                                            //
 // Author   : Park Jeong Yong                                               //
 // Student ID   : 2016722098                                                //
 // ======================================================================== //
-// Title : System Programming Assignment #2-3 (Final ls function)           //
+// Title : System Programming Assignment #3-1 (html ls function)           //
 // Description : Making 'final_ls' function with h, r, S options and        //
 // wildcard added to Assignment #2-2.                                       //
 // We consider three wildcards, [seq], ?, *.                                //
@@ -79,7 +79,7 @@ void    List_Delete(List *list);
 // Sorting files in ascending order by string
 void    Sorting(List *list, Node *NewNode); // a b c d....
 
-// Sorting files in descending order by size, if size equals ascemding order by string
+// Sorting files icd n descending order by size, if size equals ascemding order by string
 void    SortingBySize(List *list, Node *NewNode); // 4 3 2 1... / a b c d...
 
 // Sorting files in decending order by string
@@ -98,7 +98,7 @@ void    PrintInfo(List *list, char c, FILE *file);
 int     IsDir(char *Dirname);
 
 // Tokenizer
-char*     Tokenizer(char *path);
+char*   Tokenizer(char *path);
 
 // Main purpose function
 int     ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag, int argc, char **argv, FILE *file);
@@ -283,7 +283,6 @@ void List_Delete(List *list){
     (list->Tail)->Prev = ptr->Prev;
     free(ptr);
   }
-
   return;
 }
 //End List_Delete
@@ -334,7 +333,6 @@ void Sorting(List *list, Node *NewNode){ // a b c d...
 			}
 			else ptr = ptr->NextNode; // Move to nextnode
 		}
-
 //////////////////////////// Input newnode before Tail /////////////////////////
 		if(ptr == list->Tail){
       NewNode->NextNode = list->Tail;
@@ -483,7 +481,6 @@ void SortingReverse(List *list, Node *NewNode){ // d c b a...
 			}
 			else ptr = ptr->NextNode; // Move to nextnode
 		}
-
 //////////////////////////// Input newnode before Tail /////////////////////////
 		if(ptr == list->Tail){
       NewNode->NextNode = list->Tail;
@@ -638,9 +635,7 @@ void    PrintInfo(List *list, char c, FILE *file){
                     fputs("<a href=\"", file);
                     fputs(((DInfo*)ptr->Data)->filename, file);
                     fputs("\">", file);
-printf("filename : %s\n", ((DInfo*)ptr->Data)->filename);
                     name = Tokenizer(((DInfo*)ptr->Data)->filename);
-printf("name : %s\n", name);
                     fputs(name, file);
                     fputs("</a>", file);
                     fputs("</td>\n", file);
@@ -1027,46 +1022,51 @@ printf("before DIr : %s\n", Dirname);
 ////////////////////////////// return count ////////////////////////////////////
     return count; // 3
   }
-  else if(!chdir(Dirname)){
-    return 2;
-  }
+  else if(!chdir(Dirname))  return 2;
   else return 0; // default return
 }
 //End IsDir
 
 
-
+////////////////////////////////////////////////////////////////////////////
+// Tokenizer                                                              //
+// ====================================================================== //
+// Input: char *path    -> file or directory name                         //
+// Output: char *path   -> file or directory name                         //
+// Purpose: Get input and erase path. Only left file or directory name    //
+////////////////////////////////////////////////////////////////////////////
 char* Tokenizer(char *path){
-  char                filename[255] = "";   // save Filename
-  char                tk = '/';             // tokenizer
-  int                 count = 0;
-////////////////////////// Making temp /////////////////////////////////////////
-
-if(!strncmp(path, "/", 1)){
-  for (; *path != '\0'; path++){
-    if (*path == tk){
-      strcpy(filename, path + 1);
-      strcpy(path, path + 1);
-      path--;
-      count++;
+  char                filename[255] = "";   // Save Filename
+  char                tk = '/';             // Tokenizer
+  int                 count = 0;            // Ckeck "/" is exist or not
+///////////////////////////// path start with '/' //////////////////////////////
+  if(!strncmp(path, "/", 1)){
+    for (; *path != '\0'; path++){
+      if (*path == tk){ // erase '/', move to next index and  save in filename
+        strcpy(filename, path + 1);
+        strcpy(path, path + 1);
+        path--;
+        count++;
+      }
     }
   }
-}
-else if(!strncmp(path, "./", 2)){
-  for (; *path != '\0'; path++){
-    if (*path == tk){
-      strcpy(filename, path + 1);
-      strcpy(path, path + 1);
-      path--;
-      count++;
+///////////////////////////// path start with './' /////////////////////////////
+  else if(!strncmp(path, "./", 2)){
+    for (; *path != '\0'; path++){
+      if (*path == tk){ // erase '/', move to next index and  save in filename
+        strcpy(filename, path + 1);
+        strcpy(path, path + 1);
+        path--;
+        count++;
+      }
     }
   }
-}
-//  memcpy(path, filename, sizeof(filename));
+///////////////////////////// path is directory ////////////////////////////////
   if(count){
     strcpy(path, filename);
       return path;
   }
+//////////////////////////// path is not directory /////////////////////////////
   else  return path;
 
 }
@@ -1110,14 +1110,10 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
       strcpy(Dirname, "."); // Set path
       if((dirp = opendir(Dirname)) == NULL) return 0;
       else{
-
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-               // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'q')) == -1) return 0; // List insert
         }
       }
 // html title
@@ -1147,20 +1143,14 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'q')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'q')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -1196,10 +1186,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 's')) == -1) return 0; // List insert
         }
       }
 // html title
@@ -1229,10 +1216,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 's')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 's')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -1240,11 +1224,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 's')) == -1) return 0; // List insert
           }
         }
         // html title
@@ -1280,10 +1260,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'r')) == -1) return 0; // List insert
         }
       }
 // html title
@@ -1313,20 +1290,14 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'r')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'r')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'r')) == -1) return 0; // List insert
           }
         }
 // html title
@@ -1362,10 +1333,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'q')) == -1) return 0; // List insert
         }
       }
 // html title
@@ -1395,10 +1363,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'q')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'q')) == -1)  return 0; // List insert}
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -1406,11 +1371,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -1450,11 +1411,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-          if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -1484,10 +1441,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'q')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'q')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -1495,11 +1449,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 'q')) == -1){ // List inser
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -1535,10 +1485,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; //chdir ERROR
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -1568,20 +1515,14 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'q')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'q')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -1617,10 +1558,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -1650,20 +1588,14 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'n')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'n')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -1699,10 +1631,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -1732,20 +1661,14 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 's')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 's')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -1781,10 +1704,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -1814,20 +1734,14 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'r')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'r')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; //chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -1863,10 +1777,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -1897,20 +1808,14 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 's')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 's')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -1945,10 +1850,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -1975,23 +1877,16 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
     else if(!Check){
       for(optind; optind < argc; optind++){ // Iterate the number of paths
         strcpy(Dirname, argv[optind]); // Set path
-
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'r')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'r')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -2027,10 +1922,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2057,23 +1949,16 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
     else if(!Check){
       for(optind; optind < argc; optind++){ // Iterate the number of paths
         strcpy(Dirname, argv[optind]); // Set path
-
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'q')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'q')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -2110,11 +1995,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // getcwd ERROR
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-          if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2144,10 +2025,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 's')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 's')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -2155,10 +2033,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . file
-            if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -2195,11 +2070,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-          if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2226,13 +2097,9 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
     else if(!Check){
       for(optind; optind < argc; optind++){ // Iterate the number of paths
         strcpy(Dirname, argv[optind]); // Set path
-
         if((dirp = opendir(Dirname)) == NULL){ // No dir
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'r')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'r')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -2240,11 +2107,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -2281,11 +2144,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-          if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2315,10 +2174,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'q')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'q')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -2326,11 +2182,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -2367,11 +2219,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-          if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-              // List insert ERROR
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2401,10 +2249,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'q')) == -1){ // List insert ERROR
-
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'q')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -2412,10 +2257,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-            if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-                // List insert ERROR
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -2451,9 +2293,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
-          if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2483,9 +2323,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname)) printf("cannot access '%s' : No such file or directory\n", Dirname);
-          else if((List_Insert(list, Dirname, 'n')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'n')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -2494,9 +2332,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           while((dir = readdir(dirp)) != NULL){ // Read directory
             strcat(Abspath, "/");
             strcat(Abspath, dir->d_name);
-            if((List_Insert(list, Abspath, 'n')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, Abspath, 'n')) == -1)  return 0; // List insert
             strcpy(Abspath, Dirname);
           }
         }
@@ -2534,10 +2370,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-          if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2567,9 +2400,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'n')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'n')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -2577,10 +2408,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -2617,10 +2445,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-          if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2650,9 +2475,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 's')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 's')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -2660,10 +2483,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -2700,10 +2520,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-          if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2733,9 +2550,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'r')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'r')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -2743,10 +2558,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -2782,9 +2594,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // Saving file datas
-          if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2814,18 +2624,14 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'r')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'r')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -2861,9 +2667,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // Saving file datas
-          if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2893,18 +2697,14 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'n')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'n')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -2941,9 +2741,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // Read directory
-          if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -2973,18 +2771,14 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 's')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 's')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -3021,10 +2815,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // Read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-          if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -3054,9 +2845,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'r')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'r')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -3064,10 +2853,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -3104,9 +2890,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // Read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-          if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -3136,9 +2920,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'q')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'q')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -3146,10 +2928,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 'q')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'q')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -3186,9 +2965,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // Read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-          if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -3218,9 +2995,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 's')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 's')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -3228,10 +3003,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -3266,10 +3038,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
       else{
         while((dir = readdir(dirp)) != NULL){ // Read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-          if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -3299,20 +3068,15 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'n')) == -1){ // List insert
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'n')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-              return 0;
-            }
+            if(!strncmp(dir->d_name,".",1))   continue; // Remove . file
+            if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -3348,9 +3112,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(chdir(Dirname) == -1) return -1; // chdir ERROR
         if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // Read directory
-          if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -3380,18 +3142,14 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'n')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'n')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           if(chdir(Dirname) == -1) return -1; // chdir ERROR
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
-            if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -3428,9 +3186,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // Read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-          if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -3460,9 +3216,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 's')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 's')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -3470,10 +3224,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 's')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 's')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -3510,10 +3261,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(getcwd(Abspath, 255) == NULL) return -1; // getcwd ERROR
         while((dir = readdir(dirp)) != NULL){ // Read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-          if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -3543,9 +3291,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'n')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'n')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
@@ -3553,10 +3299,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -3591,9 +3334,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
       else{
         while((dir = readdir(dirp)) != NULL){ // Read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-          if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -3623,18 +3364,13 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
 /////////////////////////// Input is not dir ///////////////////////////////////
         if((dirp = opendir(Dirname)) == NULL){
           if(IsDir(Dirname))  printf("cannot access '%s' : No such file or directory\n", Dirname);// Wrong file check
-          else if((List_Insert(list, Dirname, 'r')) == -1){ // List insert ERROR
-            return 0;
-          }
+          else if((List_Insert(list, Dirname, 'r')) == -1)  return 0; // List insert
         }
 ///////////////////////////// Input is dir /////////////////////////////////////
         else{
           while((dir = readdir(dirp)) != NULL){
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
-            if((List_Insert(list, dir->d_name, 'r')) == -1){ // List insert
-              return 0;
-            }
+            if((List_Insert(list, dir->d_name, 'r')) == -1)  return 0; // List insert
           }
         }
 // html title
@@ -3669,9 +3405,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
       else{
         while((dir = readdir(dirp)) != NULL){ // Read directory
           if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-          if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-            return 0;
-          }
+          if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
         }
       }
 // html title
@@ -3701,22 +3435,17 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
         if(rt = IsDir(argv[optind])){ // Input is Dir
           if(rt == 1){
             strcpy(Dirname, argv[optind]); // Set path
-    /////////////////////////// Input is not dir ///////////////////////////////////
+/////////////////////////// Input is not dir ///////////////////////////////////
             if((dirp = opendir(Dirname)) == NULL){
               if(IsDir(Dirname)) printf("cannot access '%s' : No such file or directory\n", Dirname);
-              else if((List_Insert(list, Dirname, 'n')) == -1){ // List insert ERROR
-
-                return 0;
-              }
+              else if((List_Insert(list, Dirname, 'n')) == -1)  return 0; // List insert
             }
-    ///////////////////////////// Input is dir /////////////////////////////////////
+///////////////////////////// Input is dir /////////////////////////////////////
             else{
               if(chdir(Dirname) == -1) return -1; // chdir ERROR
               if(getcwd(Abspath,255) == NULL) return -1; // getcwd ERROR
               while((dir = readdir(dirp)) != NULL){ // Read directory
-                if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-                  return 0;
-                }
+                if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
               }
             }
     // html title
@@ -3743,13 +3472,10 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
             if((dirp = opendir(argv[optind])) == NULL) return 0;
             while((dir = readdir(dirp)) != NULL){ // Read directory
               if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
-
               if(!lstat(dir->d_name, &buf)){ // Get file buf
                 if(S_ISDIR(buf.st_mode)) continue; // Check file is Dir
               }
-              if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-                return 0;
-              }
+              if((List_Insert(list, dir->d_name, 'n')) == -1)  return 0; // List insert
             }
 // html title
             fputs("<h4>Directory path : ", file);
@@ -3779,9 +3505,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
               if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
               if(!lstat(dir->d_name, &buf)){ // Get file buf
                 if(!S_ISDIR(buf.st_mode)){ // Input is not Dir
-                  if((List_Insert(list, dir->d_name, 'n')) == -1){ // List insert
-                    return 0;
-                  }
+                  if((List_Insert(list, dir->d_name, 'n')) == -1) return 0; // List insert
                 }
               }
             }
@@ -3811,15 +3535,13 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
                 if(S_ISDIR(buf.st_mode)){ // Input is Dir
                   strcpy(path, argv[optind]); // Copy argv
                   strcat(path, dir->d_name); // Copy dir name
-
                   if((dirp2 = opendir(path)) == NULL) return 0;
                   while((dir2 = readdir(dirp2)) != NULL){ // Read directory
                     if(!strncmp(dir2->d_name,".",1))   continue; // Remove . files
                     char pathtemp[255];
                     getcwd(pathtemp, 255);
                     chdir(path);
-                    if((List_Insert(list, dir2->d_name, 'n')) == -1) // List insert
-                      return 0;
+                    if((List_Insert(list, dir2->d_name, 'n')) == -1) return 0; // List insert
                     chdir(pathtemp);
                   }
 // html title
@@ -3876,7 +3598,7 @@ int ls_function(int Check, int aflag, int lflag, int hflag, int sflag, int rflag
           while((dir = readdir(dirp)) != NULL){ // Read directory
             if(!strncmp(dir->d_name,".",1))   continue; // Remove . files
             if(!fnmatch(argv[optind], dir->d_name, 0)){ // Wildcard searching
-              List_Insert(list, dir->d_name, 'n'); // List insert
+            if(List_Insert(list, dir->d_name, 'n') == -1) return 0; // List insert
             }
             else continue; // Not wildcard
           }
